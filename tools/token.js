@@ -111,13 +111,15 @@ export async function getTokenHolders({ mint, limit = 20 }) {
     }
   }
 
-  // similar_amount: token balance within 10% of any other real holder
+  // similar_amount: virtually identical % holdings (absolute diff <= 0.02 percentage points)
+  // e.g. 0.15% and 0.152% match, but 2.33% and 2.4% do not
+  const SIMILAR_PCT_THRESHOLD = 0.02;
   const similarAmountSet = new Set();
   for (let i = 0; i < realHolders.length; i++) {
     for (let j = i + 1; j < realHolders.length; j++) {
-      const a = Number(realHolders[i].amount);
-      const b = Number(realHolders[j].amount);
-      if (a > 0 && b > 0 && Math.abs(a - b) / Math.max(a, b) <= 0.1) {
+      const a = Number(realHolders[i].pct);
+      const b = Number(realHolders[j].pct);
+      if (a > 0 && b > 0 && Math.abs(a - b) <= SIMILAR_PCT_THRESHOLD) {
         similarAmountSet.add(realHolders[i].address);
         similarAmountSet.add(realHolders[j].address);
       }
